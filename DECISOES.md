@@ -18,6 +18,16 @@ Modelo:
 
 ---
 
+## 2026-09-18 — Letra já eliminada não pode ser digitada de novo
+
+- **O que:** `Jogo.digitar()` recusa uma letra cuja melhor marca (via `letras_usadas()`) já é
+  `AUSENTE`; o chute não aceita mais aquela letra em nenhuma tentativa seguinte.
+- **Por quê:** digitar de novo uma letra que já saiu cinza não ajuda em nada e confundia quem está
+  aprendendo a jogar por eliminação. Uma letra repetida no chute (uma ocorrência certa, outra
+  ausente) continua liberada, porque `letras_usadas()` já prioriza certa/deslocada sobre ausente.
+- **Protegido por:** `tests/test_jogo.py::test_letra_marcada_ausente_nao_pode_ser_digitada_de_novo`,
+  `::test_letra_com_uma_ocorrencia_certa_e_outra_ausente_continua_digitavel`
+
 ## 2026-09-17 — A palavra é guardada com cada acento colado na sua letra (forma NFC)
 
 - **O que:** `palavras.canonica()` normaliza toda palavra que entra, ao carregar o arquivo e ao

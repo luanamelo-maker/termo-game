@@ -117,9 +117,11 @@ def test_desenha_vitoria_e_derrota_sem_quebrar(tela):
     assert tela.jogo.situacao is Situacao.VITORIA
     tela.desenhar()
 
+    # OTERM é um anagrama de TERMO: usa as mesmas letras da secreta, então nenhuma fica cinza
+    # e o chute pode ser repetido nas seis tentativas sem cair na regra de letra eliminada.
     perdida = Tela(Jogo("TERMO"))
     for _ in range(MAXIMO_TENTATIVAS):
-        digitar(perdida, "CASAL")
+        digitar(perdida, "OTERM")
         apertar(perdida, pygame.K_RETURN)
     assert perdida.jogo.situacao is Situacao.DERROTA
     perdida.desenhar()
