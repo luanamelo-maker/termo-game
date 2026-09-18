@@ -14,6 +14,7 @@ from termo import jogo as modulo_jogo
 from termo import palavras as modulo_palavras
 from termo.jogo import (
     AVISO_FALTAM_LETRAS,
+    AVISO_LETRA_ELIMINADA,
     MAXIMO_TENTATIVAS,
     TAMANHO_PALAVRA,
     Jogo,
@@ -219,6 +220,60 @@ def test_enviar_guarda_a_tentativa_e_limpa_o_que_estava_digitado():
     assert jogo.digitando == ""
 
 
+# ----- Letra eliminada -----
+
+
+def test_letra_marcada_ausente_nao_pode_ser_digitada_de_novo():
+    """Uma letra que já saiu cinza não entra mais no chute.
+
+    Por quê: depois que o jogo já disse que a letra não está na palavra, deixar digitar ela de
+    novo não ajuda em nada — só faz quem está aprendendo a jogar por eliminação perder tempo, ou
+    achar que a letra "pode ter mudado".
+    """
+    jogo = Jogo("TERMO")
+    for tecla in "CASAL":
+        jogo.digitar(tecla)
+    jogo.enviar()  # C, A, S e L saem cinza contra TERMO
+
+    jogo.digitar("C")
+    assert jogo.digitando == ""
+    assert jogo.aviso == AVISO_LETRA_ELIMINADA
+
+
+def test_letra_com_uma_ocorrencia_certa_e_outra_ausente_continua_digitavel():
+    """Letra repetida no chute, com uma ocorrência certa e outra cinza, continua liberada.
+
+    Por quê: em TETRA contra TERMO, o segundo T fica cinza só porque apareceu demais no
+    chute — o T existe na palavra (o primeiro é verde). Bloquear T pela ocorrência cinza
+    impediria chutar qualquer palavra nova com essa letra, mesmo ela estando certa.
+    """
+    jogo = Jogo("TERMO")
+    for tecla in "TETRA":
+        jogo.digitar(tecla)
+    jogo.enviar()
+    assert jogo.letras_usadas()["T"] is CERTA
+
+    jogo.digitar("T")
+    assert jogo.digitando == "T"
+
+
+def test_digitar_letra_valida_limpa_aviso_de_letra_eliminada():
+    """Depois do aviso de letra eliminada, digitar uma letra válida limpa o recado.
+
+    Por quê: senão o aviso "Letra já eliminada" ficaria preso na tela mesmo depois da pessoa
+    corrigir e seguir jogando normalmente.
+    """
+    jogo = Jogo("TERMO")
+    for tecla in "CASAL":
+        jogo.digitar(tecla)
+    jogo.enviar()
+
+    jogo.digitar("C")
+    assert jogo.aviso == AVISO_LETRA_ELIMINADA
+    jogo.digitar("B")
+    assert jogo.aviso == ""
+
+
 # ----- Fim de partida -----
 
 
@@ -237,10 +292,14 @@ def test_errar_todas_as_tentativas_termina_em_derrota_e_revela_a_palavra():
 
     Por quê: terminar sem revelar deixa a pessoa sem aprender nada com a derrota — e a
     palavra secreta não tem mais nenhum valor depois do fim.
+
+    O chute repetido é OTERM — um anagrama de TERMO fora de ordem: como usa exatamente as
+    letras da secreta, nenhuma delas fica cinza, e por isso pode ser digitado de novo em
+    todas as seis tentativas sem cair na regra de letra eliminada.
     """
     jogo = Jogo("TERMO")
     for _ in range(MAXIMO_TENTATIVAS):
-        for tecla in "CASAL":
+        for tecla in "OTERM":
             jogo.digitar(tecla)
         jogo.enviar()
     assert jogo.situacao is Situacao.DERROTA

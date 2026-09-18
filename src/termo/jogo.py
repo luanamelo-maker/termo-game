@@ -17,6 +17,7 @@ MAXIMO_TENTATIVAS = 6
 # Textos que a tela mostra. Ficam aqui, e não na `gui.py`, porque quem sabe que o chute está
 # incompleto ou que a partida terminou é o jogo — a tela só desenha o que ele disser.
 AVISO_FALTAM_LETRAS = "Faltam letras"
+AVISO_LETRA_ELIMINADA = "Letra já eliminada"
 AVISO_VITORIA = "Acertou!"
 AVISO_DERROTA = "A palavra era {palavra}"
 
@@ -140,11 +141,20 @@ class Jogo:
     # ----- O que a pessoa faz -----
 
     def digitar(self, tecla: str) -> None:
-        """Acrescenta uma letra ao chute atual. Ignora tecla que não é letra e chute já cheio."""
+        """Acrescenta uma letra ao chute atual.
+
+        Ignora tecla que não é letra, chute já cheio, e letra já eliminada — cuja melhor marca
+        obtida (ver `letras_usadas`) é ausente. Uma letra repetida no chute pode ter ficado certa
+        ou deslocada numa posição e ausente na outra: nesse caso ela continua existindo na
+        palavra, e não é bloqueada.
+        """
         if self.acabou or len(self.digitando) >= TAMANHO_PALAVRA:
             return
         letra = sem_acento(tecla)
         if len(letra) != 1 or not letra.isalpha():
+            return
+        if self.letras_usadas().get(letra) is Marca.AUSENTE:
+            self.aviso = AVISO_LETRA_ELIMINADA
             return
         self.digitando += letra
         self.aviso = ""
